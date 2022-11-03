@@ -1,6 +1,8 @@
 package collector
 
 import (
+	"fmt"
+
 	"github.com/giantswarm/micrologger"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apiserver/pkg/apis/audit"
@@ -18,10 +20,13 @@ const (
 
 var metricLabels = []string{
 	"authorization_decision",
-	"authorization_decision_reason",
+	// "authorization_decision_reason",
 	"authentication_stale_token",
 	"user",
-	"user_agent",
+	"code",
+	"verb",
+	"resource",
+	// "user_agent",
 }
 
 type AuditLogCollector struct {
@@ -61,12 +66,21 @@ func (c *AuditLogCollector) Process(event audit.Event) {
 }
 
 func buildMetricLabels(event audit.Event) prometheus.Labels {
+	var resource string
+	if event.ObjectRef != nil {
+		resource = event.ObjectRef.Resource
+	}
+
+	// TODO: group node users?
 	return prometheus.Labels{
-		"authorization_decision":        event.Annotations[decisionAnnotationKey],
-		"authorization_decision_reason": event.Annotations[reasonAnnotationKey],
-		"authentication_stale_token":    event.Annotations[staleTokenAnnotationKey],
-		"user":                          event.User.Username,
-		"user_agent":                    event.UserAgent,
+		"authorization_decision": event.Annotations[decisionAnnotationKey],
+		// "authorization_decision_reason": event.Annotations[reasonAnnotationKey],
+		"authentication_stale_token": event.Annotations[staleTokenAnnotationKey],
+		"user":                       event.User.Username,
+		"verb":                       event.Verb,
+		"code":                       fmt.Sprintf("%d", event.ResponseStatus.Code),
+		"resource":                   resource,
+		// "user_agent":                    event.UserAgent,
 	}
 }
 
