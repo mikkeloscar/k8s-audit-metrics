@@ -76,6 +76,7 @@ func startExporterServer(logger micrologger.Logger, collectors ...prometheus.Col
 	c := exporterkit.Config{
 		Collectors: collectors,
 		Logger:     logger,
+		Address:    "http://0.0.0.0:8087",
 	}
 
 	exporter, err := exporterkit.New(c)
